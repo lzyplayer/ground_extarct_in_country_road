@@ -14,8 +14,10 @@
   <depend>roscpp</depend>
   <depend>rospy</depend>
   <depend>sensor_msgs</depend>
+  <depend>nav_msgs</depend>
   <depend>pcl_ros</depend>
   <depend>pcl_msgs</depend>
+  <depend>message_filters</depend>
   <depend>tf_conversions</depend>
   <depend>tf</depend>
   <build_depend>eigen</build_depend>

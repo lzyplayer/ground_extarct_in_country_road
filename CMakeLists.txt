@@ -5,7 +5,7 @@ project(ground_detect)
 add_compile_options(-std=c++11)
 
 set(${PROJECT_NAME}_CATKIN_DEPS
-        roscpp std_msgs rospy  sensor_msgs pcl_ros pcl_msgs   tf tf_conversions  
+        roscpp std_msgs rospy  sensor_msgs pcl_ros pcl_msgs   tf tf_conversions  nav_msgs message_filters
 )
 # message_filters
 
@@ -92,7 +92,23 @@ target_link_libraries(feature_based_select
   ${PCL_LIBRARIES}
 )
 
+add_executable(local_env_provider
+        src/local_env_provider.cpp
+        )
+add_dependencies(local_env_provider ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(local_env_provider
+        ${catkin_LIBRARIES}
+        ${PCL_LIBRARIES}
+        )
 
+add_executable(grid_map_analyser
+        src/grid_map_analyser.cpp
+        )
+add_dependencies(grid_map_analyser ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(grid_map_analyser
+        ${catkin_LIBRARIES}
+        ${PCL_LIBRARIES}
+        )
 
 
 #install node
