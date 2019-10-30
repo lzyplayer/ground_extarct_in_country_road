@@ -110,6 +110,22 @@ target_link_libraries(grid_map_analyser
         ${PCL_LIBRARIES}
         )
 
+add_executable(side_lidar_line_analyse
+        src/side_lidar_line_analyse.cpp
+        )
+add_dependencies(side_lidar_line_analyse ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(side_lidar_line_analyse
+        ${catkin_LIBRARIES}
+        ${PCL_LIBRARIES}
+        )
+add_executable(vector_based_select
+        src/vector_based_select.cpp
+        )
+add_dependencies(vector_based_select ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(vector_based_select
+        ${catkin_LIBRARIES}
+        ${PCL_LIBRARIES}
+        )
 
 #install node
 # install(TARGETS streeing_to_motion

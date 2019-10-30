@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<launch>
+    <!--argument-->
+    <arg name="x_near" default="0.5" />
+    <arg name="y_near" default="12" />
+    <arg name="x_far" default="20" />
+    <arg name="line_degree_threshold" default="20" />
+    <arg name="lowest_segment_point_num" default="10" />
+    <arg name="line_merge_degree_threshold" default="25" />
+    <arg name="map_tf" default="velo_middle" />
+
+    <node pkg="ground_detect" type="side_lidar_line_analyse" name="side_lidar_line_analyse_node" output="screen">
+        <remap from="/lidar/vlp16_left/PointCloud2" to="/lidar/vlp16_left/PointCloud2" />
+        <remap from="/lidar/vlp16_right/PointCloud2" to="/lidar/vlp16_right/PointCloud2" />
+        <param name="x_near" value="$(arg x_near)" />
+        <param name="y_near" value="$(arg y_near)" />
+        <param name="x_far" value="$(arg x_far)" />
+        <param name="map_tf" value="$(arg map_tf)" />
+
+    </node>
+
+    <node pkg="ground_detect" type="vector_based_select" name="vector_based_select_node" output="screen">
+        <param name="line_degree_threshold" value="$(arg line_degree_threshold)" />
+        <param name="lowest_segment_point_num" value="$(arg lowest_segment_point_num)" />
+        <param name="line_merge_degree_threshold" value="$(arg line_merge_degree_threshold)" />
+        <param name="map_tf" value="$(arg map_tf)" />
+
+    </node>
+
+    <!--rviz-->
+    <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ground_detect)/rviz/model3.rviz -f $(arg map_tf)" />
+</launch>
