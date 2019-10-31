@@ -50,15 +50,16 @@ namespace ground_exract {
             p_nh = ros::NodeHandle("~");
             // init
             x_near = p_nh.param<float>("x_near",0.5f);
-            x_far = p_nh.param<float>("x_far",20.0f);
+            x_far = p_nh.param<float>("x_far",40.0f);
             y_near = p_nh.param<float>("y_near",9.0f);
+            z_low_threshold =p_nh.param<float>("z_low_threshold",-2.5f);
 
-            Motion_ml << 0.115046,-0.993042,0.025125,-0.321385,0.735849,0.102186,0.669391,0.678507,-0.667301,-0.058523,0.742485,-0.354922,0.000000,0.000000,0.000000,1.000000;
-            Motion_mr <<-0.034197,0.999413,0.002200,-0.342517,-0.759464,-0.024556,-0.650086,-0.759176,-0.649650,-0.023902,0.759857,-0.323078,0.000000,0.000000,0.000000,1.000000;
+            Motion_ml << 0.115702,-0.993016,0.023065,-0.331607,0.722533,0.100076,0.684054,0.606567,-0.681585,-0.062481,0.729066,-0.340333,0.000000,0.000000,0.000000,1.000000;
+            Motion_mr <<-0.032225,0.999480,0.000706,-0.328351,-0.750948,-0.023746,-0.659934,-0.623894,-0.659575,-0.021796,0.751323,-0.278273,0.000000,0.000000,0.000000,1.000000;
             //            Motion_mr << -0.0270922226574828,0.999630437289618,0.00223613855685278,-0.342517000000000,-0.759610091255644,-0.0191328889883868,-0.650097255663759,-0.759176000000000,-0.649814220169173,-0.0193111730126922,0.759847720180040,-0.323078000000000,0,0,0,1;
 
-            left_sub = new message_filters::Subscriber<sensor_msgs::PointCloud2>(nh,"/lidar/vlp16_left/PointCloud2",5);
-            rigth_sub  = new message_filters::Subscriber<sensor_msgs::PointCloud2> (nh,"/lidar/vlp16_right/PointCloud2",5);
+            left_sub = new message_filters::Subscriber<sensor_msgs::PointCloud2>(nh,"/lidar/vlp16_left/PointCloud2_compensated",5);
+            rigth_sub  = new message_filters::Subscriber<sensor_msgs::PointCloud2> (nh,"/lidar/vlp16_right/PointCloud2_compensated",5);
             sync = new message_filters::Synchronizer<pioneer_lidar_sync_policy> (pioneer_lidar_sync_policy(10),*left_sub,*rigth_sub);
             sync->registerCallback(boost::bind(&Side_line_analyse::points_callback,this,_1,_2));
             filterd_cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/ground_detect/filter_local_cloud",2);
@@ -85,7 +86,7 @@ namespace ground_exract {
             filtered_cloud->reserve(merged_full_cloud.size()/5);
             std::copy_if(merged_full_cloud.begin(),merged_full_cloud.end(),std::back_inserter(filtered_cloud->points),
                          [&](const pcl::PointXYZI& p){
-                             return p.x>x_near && p.x<x_far && abs(p.y)<y_near && p.z<-1.3;
+                             return p.x>x_near && p.x<x_far && abs(p.y)<y_near && p.z<-1.3 && p.z> z_low_threshold;
                          }
             );
             filtered_cloud->width = filtered_cloud->points.size();
@@ -123,6 +124,7 @@ namespace ground_exract {
         float x_near;
         float x_far;
         float y_near;
+        float z_low_threshold;
 
 
     };//End of class SubscribeAndPublish

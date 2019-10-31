@@ -1,15 +1,16 @@
 <?xml version="1.0"?>
 <launch>
     <!--argument-->
-    <arg name="low_lines" default="4" />
-    <arg name="z_threshold" default="0.03" />
-    <arg name="distance_threshold" default="0.15" />
+    <arg name="low_lines" default="6" />
+    <arg name="z_threshold" default="0.05" />
+    <arg name="z_low_threshold" default="-2.1" />
+    <arg name="distance_threshold" default="0.20" />
     <arg name="map_tf" default="velo_middle" />
-    <arg name="lowest_segment_point_num" default="7" />
+    <arg name="lowest_segment_point_num" default="6" />
 
 
     <node pkg="ground_detect" type="lidar_line_analyse" name="lidar_line_analyse_node" output="screen">
-        <remap from="/lidar/vlp32_middle/PointCloud2" to="/lidar/vlp32_middle/PointCloud2" />
+        <remap from="/lidar/vlp32_middle/PointCloud2" to="/lidar/vlp32_middle/PointCloud2_compensated" />
         <param name="low_lines" value="$(arg low_lines)" />
 <!--        <param name="z_threshold" value="$(arg z_threshold)" />-->
 <!--        <param name="distance_threshold" value="$(arg distance_threshold)" />-->

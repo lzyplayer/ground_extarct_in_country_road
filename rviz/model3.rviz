@@ -6,7 +6,6 @@ Panels:
       Expanded:
         - /Global Options1
         - /Status1
-        - /Grid1
         - /PointCloud21
         - /PointCloud22
       Splitter Ratio: 0.5
@@ -76,7 +75,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.0199999996
+      Size (m): 0.0399999991
       Style: Flat Squares
       Topic: /ground_detect/filter_local_cloud
       Unreliable: false
@@ -106,7 +105,7 @@ Visualization Manager:
       Queue Size: 10
       Selectable: true
       Size (Pixels): 3
-      Size (m): 0.0799999982
+      Size (m): 0.100000001
       Style: Flat Squares
       Topic: /ground_detect/ground_points
       Unreliable: false
@@ -138,25 +137,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 35.7187042
+      Distance: 26.7034893
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 14.873724
-        Y: -1.93287766
-        Z: -13.1847506
+        X: 9.59906101
+        Y: -1.53369045
+        Z: -3.07751727
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 0.864797354
+      Pitch: 1.56979632
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.0067296
+      Yaw: 3.12672782
     Saved: ~
 Window Geometry:
   Displays:
