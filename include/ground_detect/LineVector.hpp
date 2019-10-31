@@ -37,13 +37,14 @@ namespace ground_exract{
 
         bool push_point(Vector3f direction ,int index){
 //            float dot = oritention.cwiseProduct(direction).sum();
-//            float lenSq1 = direction.array().square().sum();
+            float lenSq1 = direction.array().square().sum();
 //            float lenSq2 = oritention.array().square().sum();
 //            float angle = acos(dot/sqrt(lenSq1 * lenSq2));
             float angle = acos( oritention.cwiseProduct(direction).sum()/sqrt(direction.array().square().sum() * oritention.array().square().sum()));
-            if (angle< line_degree*M_PI/180){
+            if (true){//&&angle< line_degree*M_PI/180lenSq1 <0.25&&direction[2]>-z_diff*4
                 indicator.push_back(index);
                 oritention+=direction;
+                z_diff= (z_diff*indicator.size()+direction[2])/(indicator.size()+1);
                 return true;
             } else
                 return false;
@@ -55,6 +56,7 @@ namespace ground_exract{
         vector<int> indicator;
         Vector3f oritention;
         int line_degree;
+        float z_diff;
     };
 
 }

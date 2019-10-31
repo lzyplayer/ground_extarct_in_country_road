@@ -42,11 +42,13 @@ public:
     }
 
     void onInit(){
+
         p_nh = ros::NodeHandle("~");
         lines = 32 ;
+        line_start_z_threshold = -1.85;
         line_degree_threshold = p_nh.param<int>("line_degree_threshold",20);
         lowest_segment_point_num =  p_nh.param<int>("lowest_segment_point_num",10);
-        line_merge_degree_threshold=  p_nh.param<int>("line_merge_degree_threshold",25);
+        line_merge_degree_threshold=  p_nh.param<int>("line_merge_degree_threshold",15);
         // init
         cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/ground_detect/ground_points",2);
         region_suber = nh.subscribe("/ground_detect/filter_local_cloud", 2, &Ground_line_extract::points_callback, this);
@@ -78,22 +80,51 @@ public:
         //check empty
         if(line_cloud.empty()) return sele_points;
         ground_exract::LineVector curr_line(int(line_cloud[0].intensity),line_degree_threshold);
-        for(size_t i=1;i<line_cloud.size();++i){
-
-            if(!in_line){
-                curr_line.indicator.push_back(i);
-                curr_line.oritention = Vector3f(line_cloud[i].x-line_cloud[i-1].x,line_cloud[i].y-line_cloud[i-1].y,line_cloud[i].z-line_cloud[i-1].z);
-                in_line= true;
-            } else{
-                if(!curr_line.push_point( Vector3f(line_cloud[i].x-line_cloud[i-1].x,line_cloud[i].y-line_cloud[i-1].y,line_cloud[i].z-line_cloud[i-1].z),i)){
-                    in_line= false;
-                    if (curr_line.indicator.size()>lowest_segment_point_num){ //line at least points
-                        segments_in_line.push_back(curr_line);
+        //right
+        if (curr_line.scanID>15){
+            for(size_t i=1;i<line_cloud.size();++i){
+                Vector3f direction = Vector3f(line_cloud[i].x-line_cloud[i-1].x,line_cloud[i].y-line_cloud[i-1].y,line_cloud[i].z-line_cloud[i-1].z);
+                if(!in_line){
+                    if(line_cloud[i].x<line_start_z_threshold) continue;
+                    curr_line.indicator.push_back(i);
+                    curr_line.oritention = direction;
+                    curr_line.z_diff =direction[2];
+                    in_line= true;
+                } else{
+                    if(!curr_line.push_point(direction,i)){
+                        in_line= false;
+                        if (curr_line.indicator.size()>lowest_segment_point_num){ //line at least points
+                            segments_in_line.push_back(curr_line);
+                        }
+                        curr_line.indicator.clear();
                     }
-                    curr_line.indicator.clear();
+                }
+                if (curr_line.indicator.size()>lowest_segment_point_num) //line at least points
+                    segments_in_line.push_back(curr_line);
+            }
+        }else{//left
+            for(int i=int(line_cloud.size())-2;i>=0;--i){
+                Vector3f direction = Vector3f(line_cloud[i].x-line_cloud[i+1].x,line_cloud[i].y-line_cloud[i+1].y,line_cloud[i].z-line_cloud[i+1].z);
+                if(!in_line){
+                    if(line_cloud[i].x<line_start_z_threshold) continue;
+                    curr_line.indicator.push_back(i);
+                    curr_line.oritention = direction;
+                    curr_line.z_diff =direction[2];
+                    in_line= true;
+                } else{
+                    if(!curr_line.push_point(direction,i)){
+                        in_line= false;
+                        if (curr_line.indicator.size()>lowest_segment_point_num){ //line at least points
+                            segments_in_line.push_back(curr_line);
+                        }
+                        curr_line.indicator.clear();
+                    }
                 }
             }
+            if (curr_line.indicator.size()>lowest_segment_point_num) //line at least points
+                segments_in_line.push_back(curr_line);
         }
+
         //check empty
         if(segments_in_line.empty())  return sele_points;
         int max_size=-1;
@@ -151,6 +182,7 @@ private:
     int line_degree_threshold;
     int lowest_segment_point_num;
     int line_merge_degree_threshold;
+    float line_start_z_threshold;
 
 };//End of class SubscribeAndPublish
 

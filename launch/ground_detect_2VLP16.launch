@@ -3,15 +3,17 @@
     <!--argument-->
     <arg name="x_near" default="0.5" />
     <arg name="y_near" default="9" />
-    <arg name="x_far" default="20" />
+    <arg name="x_far" default="40" />
+    <arg name="z_low_threshold" default="-2.5" />
     <arg name="line_degree_threshold" default="20" />
     <arg name="lowest_segment_point_num" default="10" />
-    <arg name="line_merge_degree_threshold" default="25" />
+    <arg name="line_merge_degree_threshold" default="15" />
     <arg name="map_tf" default="velo_middle" />
 
     <node pkg="ground_detect" type="side_lidar_line_analyse" name="side_lidar_line_analyse_node" output="screen">
-        <remap from="/lidar/vlp16_left/PointCloud2" to="/lidar/vlp16_left/PointCloud2" />
-        <remap from="/lidar/vlp16_right/PointCloud2" to="/lidar/vlp16_right/PointCloud2" />
+        <remap from="/lidar/vlp16_left/PointCloud2_compensated" to="/lidar/vlp16_left/PointCloud2_compensated" />
+        <remap from="/lidar/vlp16_right/PointCloud2_compensated" to="/lidar/vlp16_right/PointCloud2_compensated" />
+        <param name="z_low_threshold" value="$(arg z_low_threshold)" />
         <param name="x_near" value="$(arg x_near)" />
         <param name="y_near" value="$(arg y_near)" />
         <param name="x_far" value="$(arg x_far)" />

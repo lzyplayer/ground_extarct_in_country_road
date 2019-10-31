@@ -48,20 +48,21 @@ public:
         distanceSq_threshold = p_nh.param<float>("distance_threshold",0.1f);
         distanceSq_threshold *= distanceSq_threshold;
         z_threshold =p_nh.param<float>("z_threshold",0.03f);
-        lowest_segment_point_num = p_nh.param<int>("lowest_segment_point_num",15);
+//        z_low_threshold =p_nh.param<float>("z_low_threshold",-2.1f);
+        lowest_segment_point_num = p_nh.param<int>("lowest_segment_point_num",5);
         range_init();
 //        z_threshold = p_nh.param<float>("z_threshold",0.02);
 //        distance_threshold = p_nh.param<float>("distance_threshold",0.2);
         init_flag= false;
         //suber and puber
-        scan_range_pub = nh.advertise<ground_detect::road_range>("/ground_detect/road_range",2);
+//        scan_range_pub = nh.advertise<ground_detect::road_range>("/ground_detect/road_range",2);
         cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/ground_detect/ground_points",2);
         region_suber = nh.subscribe("/ground_detect/forward_points", 2, &Ground_extract::points_callback, this);
 //        range_suber = nh.subscribe("/ground_detect/road_range",2,&Lidar_analyse::range_callback,this);
     }
     void range_init(){
         for (size_t i=0;i<low_lines*2;i++){
-            scan_range.road_range.push_back ((pow(-1,i+2))*M_PI/5);
+            scan_range.road_range.push_back ((pow(-1,i+2))*M_PI/2);
         }
     }
 
@@ -160,7 +161,7 @@ public:
 
         }
         scan_range.header.stamp = point_msg->header.stamp;
-        scan_range_pub.publish(scan_range);
+//        scan_range_pub.publish(scan_range);
         pcl_conversions::toPCL(point_msg->header, ground_cloud.header);
         cloud_pub.publish(ground_cloud);
 //        cout<<"----cloud_published------"<<endl;
@@ -172,7 +173,8 @@ public:
         pcl::PointCloud<pcl::PointXYZI>::Ptr c_pc(new pcl::PointCloud<pcl::PointXYZI>());
         pcl::fromROSMsg(*p_msg, *c_pc);
         for(size_t i=0 ;i<c_pc->size();i++){
-            scan_lines[int(c_pc->points[i].intensity)].push_back(c_pc->points[i]);
+//            if(c_pc->points[i].z>z_low_threshold)
+                scan_lines[int(c_pc->points[i].intensity)].push_back(c_pc->points[i]);
         }
         return scan_lines;
     }
@@ -240,7 +242,7 @@ public:
     ros::NodeHandle nh;
     ros::NodeHandle p_nh;
     ros::Publisher cloud_pub;
-    ros::Publisher scan_range_pub;
+//    ros::Publisher scan_range_pub;
     ros::Subscriber region_suber;
 //    ros::Subscriber range_suber;
 
@@ -252,6 +254,8 @@ public:
     int lowest_segment_point_num;
     float distanceSq_threshold;
     float z_threshold;
+//    float z_low_threshold;
+
     bool init_flag;
     ground_detect::road_range scan_range;
 

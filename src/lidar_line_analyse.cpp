@@ -43,6 +43,8 @@ public:
         p_nh = ros::NodeHandle("~");
         // init
         low_lines = p_nh.param<int>("low_lines",6);
+        z_low_threshold =p_nh.param<float>("z_low_threshold",-2.1f);
+
 //        z_threshold = p_nh.param<float>("z_threshold",0.02);
 //        distance_threshold = p_nh.param<float>("distance_threshold",0.2);
         range_init();
@@ -53,7 +55,7 @@ public:
     }
     void range_init(){
         for (size_t i=0;i<low_lines*2;i++){
-            scan_range.road_range.push_back ((pow(-1,i+2))*M_PI/5);
+            scan_range.road_range.push_back ((pow(-1,i+2))*M_PI/2);
         }
     }
 
@@ -119,6 +121,7 @@ private:
     ros::Publisher cloud_pub;
     ros::Subscriber raw_pc_suber;
     ros::Subscriber range_suber;
+    float z_low_threshold;
 
 
 
