@@ -93,6 +93,9 @@ public:
                     curr_line.indicator.clear();
                 }
             }
+            if (curr_line.indicator.size()>lowest_segment_point_num){ //line at least points
+                segments_in_line.push_back(curr_line);
+            }
         }
         //check empty
         if(segments_in_line.empty())  return sele_points;
