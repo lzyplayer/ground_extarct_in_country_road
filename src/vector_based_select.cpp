@@ -44,9 +44,9 @@ public:
     void onInit(){
         p_nh = ros::NodeHandle("~");
         lines = 32 ;
-        line_degree_threshold = p_nh.param<int>("line_degree_threshold",15);
-        lowest_segment_point_num =  p_nh.param<int>("lowest_segment_point_num",5);
-        line_merge_degree_threshold=  p_nh.param<int>("line_merge_degree_threshold",20);
+        line_degree_threshold = p_nh.param<int>("line_degree_threshold",20);
+        lowest_segment_point_num =  p_nh.param<int>("lowest_segment_point_num",10);
+        line_merge_degree_threshold=  p_nh.param<int>("line_merge_degree_threshold",25);
         // init
         cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/ground_detect/ground_points",2);
         region_suber = nh.subscribe("/ground_detect/filter_local_cloud", 2, &Ground_line_extract::points_callback, this);

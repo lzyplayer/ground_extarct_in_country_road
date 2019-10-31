@@ -2,7 +2,7 @@
 <launch>
     <!--argument-->
     <arg name="x_near" default="0.5" />
-    <arg name="y_near" default="12" />
+    <arg name="y_near" default="9" />
     <arg name="x_far" default="20" />
     <arg name="line_degree_threshold" default="20" />
     <arg name="lowest_segment_point_num" default="10" />

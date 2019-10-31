@@ -19,13 +19,13 @@
 
     </node>
 
-    <node pkg="ground_detect" type="vector_based_select" name="vector_based_select_node" output="screen">
-        <param name="line_degree_threshold" value="$(arg line_degree_threshold)" />
-        <param name="lowest_segment_point_num" value="$(arg lowest_segment_point_num)" />
-        <param name="line_merge_degree_threshold" value="$(arg line_merge_degree_threshold)" />
-        <param name="map_tf" value="$(arg map_tf)" />
+<!--    <node pkg="ground_detect" type="vector_based_select" name="vector_based_select_node" output="screen">-->
+<!--        <param name="line_degree_threshold" value="$(arg line_degree_threshold)" />-->
+<!--        <param name="lowest_segment_point_num" value="$(arg lowest_segment_point_num)" />-->
+<!--        <param name="line_merge_degree_threshold" value="$(arg line_merge_degree_threshold)" />-->
+<!--        <param name="map_tf" value="$(arg map_tf)" />-->
 
-    </node>
+<!--    </node>-->
 
     <!--rviz-->
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ground_detect)/rviz/model3.rviz -f $(arg map_tf)" />
