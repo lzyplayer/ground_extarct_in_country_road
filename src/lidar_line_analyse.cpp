@@ -42,7 +42,7 @@ public:
     void onInit(){
         p_nh = ros::NodeHandle("~");
         // init
-        low_lines = p_nh.param<int>("low_lines",6);
+        low_lines = p_nh.param<int>("low_lines",5);
         z_low_threshold =p_nh.param<float>("z_low_threshold",-2.1f);
 
 //        z_threshold = p_nh.param<float>("z_threshold",0.02);
@@ -55,7 +55,7 @@ public:
     }
     void range_init(){
         for (size_t i=0;i<low_lines*2;i++){
-            scan_range.road_range.push_back ((pow(-1,i+2))*M_PI/2);
+            scan_range.road_range.push_back ((pow(-1,i+2))*M_PI/4);
         }
     }
 

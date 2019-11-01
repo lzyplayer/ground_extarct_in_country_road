@@ -5,7 +5,7 @@ project(ground_detect)
 add_compile_options(-std=c++11)
 
 set(${PROJECT_NAME}_CATKIN_DEPS
-        roscpp std_msgs rospy  sensor_msgs pcl_ros pcl_msgs   tf tf_conversions  nav_msgs message_filters
+        roscpp std_msgs rospy  sensor_msgs pcl_ros pcl_msgs   tf tf_conversions  nav_msgs message_filters ecl_geometry
 )
 # message_filters
 
@@ -118,15 +118,22 @@ target_link_libraries(side_lidar_line_analyse
         ${catkin_LIBRARIES}
         ${PCL_LIBRARIES}
         )
-add_executable(vector_based_select
-        src/vector_based_select.cpp
+add_executable(ransac_get_plane
+        src/ransac_get_plane.cpp
         )
-add_dependencies(vector_based_select ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(vector_based_select
+add_dependencies(ransac_get_plane ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(ransac_get_plane
         ${catkin_LIBRARIES}
         ${PCL_LIBRARIES}
         )
-
+add_executable(path_provider
+        src/path_provider.cpp
+        )
+add_dependencies(path_provider ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(path_provider
+        ${catkin_LIBRARIES}
+        ${PCL_LIBRARIES}
+        )
 #install node
 # install(TARGETS streeing_to_motion
 #         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
