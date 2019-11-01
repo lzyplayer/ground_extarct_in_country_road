@@ -20,6 +20,7 @@
   <depend>message_filters</depend>
   <depend>tf_conversions</depend>
   <depend>tf</depend>
+  <depend>ecl_geometry</depend>
   <build_depend>eigen</build_depend>
   <build_export_depend>eigen</build_export_depend>
   <build_depend>message_generation</build_depend>

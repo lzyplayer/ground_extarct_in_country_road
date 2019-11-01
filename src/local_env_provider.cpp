@@ -48,7 +48,7 @@ namespace ground_exract {
 
         void onInit(){
             p_nh = ros::NodeHandle("~");
-            z_threshold = p_nh.param<float>("z_threshold",-2.1);
+            z_threshold = p_nh.param<float>("z_threshold",-2.5);
             // init
             Motion_ml << 0.115702,-0.993016,0.023065,-0.331607,0.722533,0.100076,0.684054,0.606567,-0.681585,-0.062481,0.729066,-0.340333,0.000000,0.000000,0.000000,1.000000;
             Motion_mr <<-0.032225,0.999480,0.000706,-0.328351,-0.750948,-0.023746,-0.659934,-0.623894,-0.659575,-0.021796,0.751323,-0.278273,0.000000,0.000000,0.000000,1.000000;
@@ -66,21 +66,21 @@ namespace ground_exract {
         void points_callback (const sensor_msgs::PointCloud2ConstPtr& left_pc ,const sensor_msgs::PointCloud2ConstPtr& right_pc ,const sensor_msgs::PointCloud2ConstPtr& middle_pc ) const{
             pcl::PointCloud<pcl::PointXYZI>::Ptr left_ori (new pcl::PointCloud<pcl::PointXYZI> ());
             pcl::PointCloud<pcl::PointXYZI>::Ptr right_ori (new pcl::PointCloud<pcl::PointXYZI> ());
-            pcl::PointCloud<pcl::PointXYZI>::Ptr middle_ori (new pcl::PointCloud<pcl::PointXYZI> ());
+//            pcl::PointCloud<pcl::PointXYZI>::Ptr middle_ori (new pcl::PointCloud<pcl::PointXYZI> ());
             pcl::fromROSMsg(*left_pc, *left_ori);
             pcl::fromROSMsg(*right_pc, *right_ori);
-            pcl::fromROSMsg(*middle_pc, *middle_ori);
+//            pcl::fromROSMsg(*middle_pc, *middle_ori);
             pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud_left (new pcl::PointCloud<pcl::PointXYZI> ());
             pcl::PointCloud<pcl::PointXYZI>::Ptr transformed_cloud_right (new pcl::PointCloud<pcl::PointXYZI> ());
             pcl::transformPointCloud (*left_ori, *transformed_cloud_left, Motion_ml);
             pcl::transformPointCloud (*right_ori, *transformed_cloud_right, Motion_mr);
             pcl::PointCloud<pcl::PointXYZI> merged_full_cloud  = *transformed_cloud_left + *transformed_cloud_right;
-            merged_full_cloud += *middle_ori;
+//            merged_full_cloud += *middle_ori;
             pcl::PointCloud<pcl::PointXYZI>::Ptr filtered_cloud (new pcl::PointCloud<pcl::PointXYZI> ());
             filtered_cloud->reserve(merged_full_cloud.size()/5);
             std::copy_if(merged_full_cloud.begin(),merged_full_cloud.end(),std::back_inserter(filtered_cloud->points),
                          [&](const pcl::PointXYZI& p){
-                             return p.x>0 && p.x<20 && abs(p.y)<12 && p.z<-1.3 && p.z> z_threshold;
+                             return p.x>3 && p.x<20 && abs(p.y)<12 && p.z<-1.3 && p.z> z_threshold;
                          }
             );
             filtered_cloud->width = filtered_cloud->points.size();
