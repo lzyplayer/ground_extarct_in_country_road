@@ -46,6 +46,8 @@ namespace ground_exract {
             low_lines = p_nh.param<int>("low_lines",5);
 
             // init
+            line_pub = nh.advertise<sensor_msgs::PointCloud2>("/ground_detect/Path_pointcloud",2);
+
             path_pub = nh.advertise<nav_msgs::Path>("/ground_detect/Path_original",2);
             ground_pc_suber = nh.subscribe("/ground_detect/ground_points", 2, &Path_provider::callback, this);
             path_buffer = vector<boost::circular_buffer<Vector3f>>(low_lines,   boost::circular_buffer<Vector3f>(20));
@@ -60,10 +62,20 @@ namespace ground_exract {
             nav_msgs::Path path;
             path.header = ground_pc_msg->header;
             // CubicSpline
-            ecl::Array<double> x_set(low_lines);
-            ecl::Array<double> y_set(low_lines);
+            ecl::Array<double> x_set(low_lines+1);
+            ecl::Array<double> y_set(low_lines+1);
             // calculate center point
             int point_p = 0;
+            x_set[0] = double(0);
+            y_set[0] = double(0);
+            //add start point
+            geometry_msgs::PoseStamped start_pose;
+            start_pose.header = ground_pc_msg->header;
+            start_pose.pose.position.x = 0;
+            start_pose.pose.position.y = 0;
+            start_pose.pose.position.z = 0;
+            path.poses.push_back(start_pose);
+
             for (int i = 0; i < low_lines; ++i) {
                 float sum_x=0, sum_y=0,sum_z=0;
                 int line_point_num=0;
@@ -85,13 +97,21 @@ namespace ground_exract {
                 curr_pose.pose.position.y = path_scan_av[1];
                 curr_pose.pose.position.z = path_scan_av[2];
 //                 CubicSpline
-                cout<<double(path_scan_av[0])<<endl;
-                x_set[i] = double(path_scan_av[0]);
-                y_set[i] = double(path_scan_av[1]);
+//                cout<<double(path_scan_av[0])<<endl;
+                x_set[i+1] = double(path_scan_av[0]);
+                y_set[i+1] = double(path_scan_av[1]);
                 path.poses.push_back(curr_pose);
             }
             ecl::CubicSpline cubic = ecl::CubicSpline::Natural(x_set, y_set);
-            cout<<cubic<<endl;
+            pcl::PointCloud<pcl::PointXYZ>::Ptr path_p (new pcl::PointCloud<pcl::PointXYZ>());
+            pcl_conversions::toPCL(ground_pc_msg->header,path_p->header);
+            for (int j = 1; j <150; ++j) {
+                double x_var =double(j)/10.0f;
+                double y_var =cubic(x_var);
+                pcl::PointXYZ p(x_var,y_var,0);
+                path_p->push_back(p);
+            }
+            line_pub.publish(path_p);
             path_pub.publish(path);
 
 
@@ -103,6 +123,7 @@ namespace ground_exract {
 
         ros::Subscriber ground_pc_suber;
         ros::Publisher path_pub;
+        ros::Publisher line_pub;
         vector<boost::circular_buffer<Vector3f>> path_buffer;
 
         //param

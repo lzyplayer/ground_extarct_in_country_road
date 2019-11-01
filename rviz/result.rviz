@@ -8,6 +8,7 @@ Panels:
         - /Status1
         - /PointCloud22
         - /Path1
+        - /PointCloud24
       Splitter Ratio: 0.5
     Tree Height: 775
   - Class: rviz/Selection
@@ -67,9 +68,9 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 4.46856689
+      Max Intensity: 3.55047488
       Min Color: 0; 0; 0
-      Min Intensity: 0.369431913
+      Min Intensity: 0.355521649
       Name: PointCloud2
       Position Transformer: XYZ
       Queue Size: 10
@@ -127,7 +128,7 @@ Visualization Manager:
       Enabled: true
       Invert Rainbow: false
       Max Color: 255; 255; 255
-      Max Intensity: 100
+      Max Intensity: 96
       Min Color: 0; 0; 0
       Min Intensity: 0
       Name: PointCloud2
@@ -172,6 +173,36 @@ Visualization Manager:
       Topic: /ground_detect/Path_original
       Unreliable: false
       Value: true
+    - Alpha: 1
+      Autocompute Intensity Bounds: true
+      Autocompute Value Bounds:
+        Max Value: 10
+        Min Value: -10
+        Value: true
+      Axis: Z
+      Channel Name: intensity
+      Class: rviz/PointCloud2
+      Color: 255; 255; 255
+      Color Transformer: Intensity
+      Decay Time: 0
+      Enabled: true
+      Invert Rainbow: false
+      Max Color: 255; 255; 255
+      Max Intensity: 4096
+      Min Color: 0; 0; 0
+      Min Intensity: 0
+      Name: PointCloud2
+      Position Transformer: XYZ
+      Queue Size: 10
+      Selectable: true
+      Size (Pixels): 3
+      Size (m): 0.200000003
+      Style: Flat Squares
+      Topic: /ground_detect/Path_pointcloud
+      Unreliable: false
+      Use Fixed Frame: true
+      Use rainbow: true
+      Value: true
   Enabled: true
   Global Options:
     Background Color: 48; 48; 48
@@ -197,25 +228,25 @@ Visualization Manager:
   Views:
     Current:
       Class: rviz/Orbit
-      Distance: 32.0582466
+      Distance: 43.2802277
       Enable Stereo Rendering:
         Stereo Eye Separation: 0.0599999987
         Stereo Focal Distance: 1
         Swap Stereo Eyes: false
         Value: false
       Focal Point:
-        X: 7.81826878
-        Y: -5.27649164
-        Z: -1.57958901
+        X: 0.872983575
+        Y: -0.315937698
+        Z: -3.20825553
       Focal Shape Fixed Size: true
       Focal Shape Size: 0.0500000007
       Invert Z Axis: false
       Name: Current View
       Near Clip Distance: 0.00999999978
-      Pitch: 1.56979632
+      Pitch: 1.53479624
       Target Frame: <Fixed Frame>
       Value: Orbit (rviz)
-      Yaw: 3.64040065
+      Yaw: 3.79040289
     Saved: ~
 Window Geometry:
   Displays:
