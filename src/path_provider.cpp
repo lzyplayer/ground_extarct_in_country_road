@@ -89,7 +89,7 @@ namespace ground_exract {
                 path_scan_av/=path_buffer[i].size();
                 Vector4d simi_path_scan_av = Vector4d::Constant(1);
                 simi_path_scan_av.head(3) = path_scan_av;
-                cout<<simi_path_scan_av<<endl;
+//                cout<<simi_path_scan_av<<endl;
 
                 Vector4d path_scan_av_geo = M_geo_vleom * simi_path_scan_av;
                 curr_pose.pose.position.x = path_scan_av_geo[0];
