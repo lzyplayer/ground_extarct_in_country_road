@@ -1,0 +1,29 @@
+image: ros:melodic-robot
+
+variables:
+  USE_ROSDEP: "true"
+  ROSINSTALL_CI_JOB_TOKEN: "true"
+  WSTOOL_RECURSIVE: "true"
+
+cache:
+  paths:
+    - ccache/
+
+before_script:
+ - git clone http://47.108.82.182/pioneer/ros_gitlab_ci.git
+ - source ros_gitlab_ci/gitlab-ci.bash >/dev/null
+
+# catkin_lint
+catkin lint:
+  stage: build
+  script:
+    - apt install -y python-catkin-lint >/dev/null 2>&1
+    - apt install -y ros-kinetic-ecl-geometry >/dev/null 2>&1
+    - catkin_lint -W3 .
+
+# catkin_make
+catkin_make:
+  stage: build
+  script:
+    # - apt install -y qt5-default >/dev/null 2>&1 # 在这里添加其他程序包
+    - catkin_make
