@@ -23,9 +23,9 @@
         <param name="lowest_segment_point_num" value="$(arg lowest_segment_point_num)" />
     </node>
 
-    <node pkg="ground_detect" type="path_provider" name="path_provider_node" output="screen">
-        <param name="low_lines" value="$(arg low_lines)" />
-    </node>
+<!--    <node pkg="ground_detect" type="path_provider" name="path_provider_node" output="screen">-->
+<!--        <param name="low_lines" value="$(arg low_lines)" />-->
+<!--    </node>-->
     <!--rviz-->
     <node type="rviz" name="rviz" pkg="rviz" args="-d $(find ground_detect)/rviz/result.rviz -f $(arg map_tf)" />
 </launch>

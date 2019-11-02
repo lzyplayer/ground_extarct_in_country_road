@@ -34,6 +34,7 @@ namespace ground_exract {
     using namespace Eigen;
     using namespace std;
     using namespace boost;
+
     class Path_provider {
     public:
         Path_provider() {
@@ -43,14 +44,15 @@ namespace ground_exract {
 
         void onInit(){
             p_nh = ros::NodeHandle("~");
-            low_lines = p_nh.param<int>("low_lines",5);
+            low_lines = p_nh.param<int>("low_lines",4);
 
             // init
-            line_pub = nh.advertise<sensor_msgs::PointCloud2>("/ground_detect/Path_pointcloud",2);
+            curved_path_pub = nh.advertise<nav_msgs::Path>("/ground_detect/Path_curved",2);
 
             path_pub = nh.advertise<nav_msgs::Path>("/ground_detect/Path_original",2);
             ground_pc_suber = nh.subscribe("/ground_detect/ground_points", 2, &Path_provider::callback, this);
-            path_buffer = vector<boost::circular_buffer<Vector3f>>(low_lines,   boost::circular_buffer<Vector3f>(20));
+            // path buffer intialise
+            path_buffer = vector<boost::circular_buffer<Vector3d>>(low_lines,   boost::circular_buffer<Vector3d>(20));
 
         }
 
@@ -61,13 +63,10 @@ namespace ground_exract {
             if (ground_pc->empty())  return;
             nav_msgs::Path path;
             path.header = ground_pc_msg->header;
-            // CubicSpline
-            ecl::Array<double> x_set(low_lines+1);
-            ecl::Array<double> y_set(low_lines+1);
-            // calculate center point
-            int point_p = 0;
-            x_set[0] = double(0);
-            y_set[0] = double(0);
+
+            //  center path point init
+            Matrix2Xd path_point(2,low_lines+1);
+            path_point.col(0)<<0,0;
             //add start point
             geometry_msgs::PoseStamped start_pose;
             start_pose.header = ground_pc_msg->header;
@@ -75,46 +74,80 @@ namespace ground_exract {
             start_pose.pose.position.y = 0;
             start_pose.pose.position.z = 0;
             path.poses.push_back(start_pose);
-
+            //
+            int point_p = 0; int path_point_num=0;
             for (int i = 0; i < low_lines; ++i) {
                 float sum_x=0, sum_y=0,sum_z=0;
                 int line_point_num=0;
-                while (int(ground_pc->points[point_p].intensity)==i && point_p<ground_pc->size()){
+                while (point_p<ground_pc->size() && int(ground_pc->points[point_p].intensity)==i){
                     sum_x+=ground_pc->points[point_p].x;
                     sum_y+=ground_pc->points[point_p].y;
                     sum_z+=ground_pc->points[point_p].z;
                     line_point_num++;
                     point_p++;
                 }
-                if (line_point_num<5)continue;
+                //check point num
+                if (line_point_num<5)break;
                 geometry_msgs::PoseStamped curr_pose;
                 curr_pose.header = ground_pc_msg->header;
-                Vector3f pos (sum_x/line_point_num, sum_y/line_point_num, sum_z/line_point_num);
+                Vector3d pos (sum_x/line_point_num, sum_y/line_point_num, sum_z/line_point_num);
                 path_buffer[i].push_back(pos);
-                Vector3f path_scan_av = std::accumulate(path_buffer[i].begin(),path_buffer[i].end(),Vector3f(0,0,0));
+                Vector3d path_scan_av = std::accumulate(path_buffer[i].begin(),path_buffer[i].end(),Vector3d(0,0,0));
                 path_scan_av/=path_buffer[i].size();
                 curr_pose.pose.position.x = path_scan_av[0];
                 curr_pose.pose.position.y = path_scan_av[1];
                 curr_pose.pose.position.z = path_scan_av[2];
-//                 CubicSpline
-//                cout<<double(path_scan_av[0])<<endl;
-                x_set[i+1] = double(path_scan_av[0]);
-                y_set[i+1] = double(path_scan_av[1]);
+                //  note point
+                path_point.col(i+1) = path_scan_av.head(2);
+                path_point_num++;
                 path.poses.push_back(curr_pose);
             }
-            ecl::CubicSpline cubic = ecl::CubicSpline::Natural(x_set, y_set);
-            pcl::PointCloud<pcl::PointXYZ>::Ptr path_p (new pcl::PointCloud<pcl::PointXYZ>());
-            pcl_conversions::toPCL(ground_pc_msg->header,path_p->header);
-            for (int j = 1; j <150; ++j) {
-                double x_var =double(j)/10.0f;
-                double y_var =cubic(x_var);
-                pcl::PointXYZ p(x_var,y_var,0);
-                path_p->push_back(p);
-            }
-            line_pub.publish(path_p);
+            //transform point for curve
+
+            const auto& curved_path = transform_path_point(path_point.block(0,0,2,path_point_num),path_point_num,ground_pc_msg->header);
+
+            curved_path_pub.publish(*curved_path);
             path_pub.publish(path);
 
 
+        }
+        template <typename Derived>
+        nav_msgs::PathConstPtr transform_path_point(const MatrixBase<Derived>& in_points ,const int point_num ,const std_msgs::Header head) const{
+            //tranform point to fit
+//            cout<< in_points<<endl;
+            double turn_oriten = -atan2(in_points(1,point_num-1),in_points(0,point_num-1));
+            Matrix2d rotation_m;
+            rotation_m << cos(turn_oriten) , -sin(turn_oriten),sin(turn_oriten),cos(turn_oriten);
+            Matrix2d inv_rotation_m;
+            inv_rotation_m << cos(-turn_oriten) , -sin(-turn_oriten),sin(-turn_oriten),cos(-turn_oriten);
+            Matrix2Xd rotated_path_point = rotation_m * in_points.block(0,0,2,point_num);
+
+            // CubicSpline init
+            ecl::Array<double> x_set(low_lines+1);
+            ecl::Array<double> y_set(low_lines+1);
+            double x_max_range = in_points(0,point_num-1);
+            for(int i=0;i<point_num;++i){
+                x_set[i] = in_points(0,i);
+                y_set[i] = in_points(1,i);
+            }
+            //curve func
+            ecl::CubicSpline cubic = ecl::CubicSpline::Natural(x_set, y_set);
+            //ready path
+            nav_msgs::PathPtr pathPtr(new nav_msgs::Path());
+            pathPtr->header = head;
+            for (int j = 0; j <x_max_range*10; ++j) {
+                double x_var =double(j)/10.0f;
+                double y_var =cubic(x_var);
+                geometry_msgs::PoseStamped curr_pose;
+                curr_pose.header = head;
+                curr_pose.pose.position.x = cos(-turn_oriten)*x_var -sin(-turn_oriten)*y_var;
+                curr_pose.pose.position.y = sin(-turn_oriten)*x_var+cos(-turn_oriten)*y_var;
+                curr_pose.pose.position.z = 0;
+                pathPtr->poses.push_back(curr_pose);
+
+            }
+
+            return pathPtr;
         }
 
     private:
@@ -123,8 +156,8 @@ namespace ground_exract {
 
         ros::Subscriber ground_pc_suber;
         ros::Publisher path_pub;
-        ros::Publisher line_pub;
-        vector<boost::circular_buffer<Vector3f>> path_buffer;
+        ros::Publisher curved_path_pub;
+        vector<boost::circular_buffer<Vector3d>> path_buffer;
 
         //param
         int low_lines;
