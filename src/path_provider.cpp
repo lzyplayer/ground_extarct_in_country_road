@@ -45,7 +45,8 @@ namespace ground_exract {
         void onInit(){
             p_nh = ros::NodeHandle("~");
             low_lines = p_nh.param<int>("low_lines",4);
-            geometry_center_frame  ="geometry_center";
+            abandon_min_points_num = p_nh.param<int>("abandon_min_points_num",12);
+            geometry_center_frame  ="velo_middle";
             // init
             curved_path_pub = nh.advertise<nav_msgs::Path>("/ground_detect/Path_curved",2);
 
@@ -53,7 +54,8 @@ namespace ground_exract {
             ground_pc_suber = nh.subscribe("/ground_detect/ground_points", 2, &Path_provider::callback, this);
             // path buffer intialise
             path_buffer = vector<boost::circular_buffer<Vector3d>>(low_lines,   boost::circular_buffer<Vector3d>(15));
-            M_geo_vleom << 0.999971,-0.007000,-0.003000,-0.064900,0.007000,0.999976,-0.000021,0.000000,0.003000,-0.000000,0.999996,1.550000,0.000000,0.000000,0.000000,1.000000;
+//            M_geo_vleom << 0.999971,-0.007000,-0.003000,-0.064900,0.007000,0.999976,-0.000021,0.000000,0.003000,-0.000000,0.999996,1.550000,0.000000,0.000000,0.000000,1.000000;
+            M_geo_vleom.setIdentity();
         }
 
         void callback(const sensor_msgs::PointCloud2ConstPtr& ground_pc_msg) {
@@ -164,6 +166,7 @@ namespace ground_exract {
 
         //param
         int low_lines;
+        int abandon_min_points_num;
         string geometry_center_frame;
 
     };//End of class SubscribeAndPublish
