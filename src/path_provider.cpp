@@ -45,15 +45,15 @@ namespace ground_exract {
         void onInit(){
             p_nh = ros::NodeHandle("~");
             low_lines = p_nh.param<int>("low_lines",4);
-
+            geometry_center_frame  ="geometry_center";
             // init
             curved_path_pub = nh.advertise<nav_msgs::Path>("/ground_detect/Path_curved",2);
 
             path_pub = nh.advertise<nav_msgs::Path>("/ground_detect/Path_original",2);
             ground_pc_suber = nh.subscribe("/ground_detect/ground_points", 2, &Path_provider::callback, this);
             // path buffer intialise
-            path_buffer = vector<boost::circular_buffer<Vector3d>>(low_lines,   boost::circular_buffer<Vector3d>(20));
-
+            path_buffer = vector<boost::circular_buffer<Vector3d>>(low_lines,   boost::circular_buffer<Vector3d>(15));
+            M_geo_vleom << 0.999971,-0.007000,-0.003000,-0.064900,0.007000,0.999976,-0.000021,0.000000,0.003000,-0.000000,0.999996,1.550000,0.000000,0.000000,0.000000,1.000000;
         }
 
         void callback(const sensor_msgs::PointCloud2ConstPtr& ground_pc_msg) {
@@ -63,18 +63,10 @@ namespace ground_exract {
             if (ground_pc->empty())  return;
             nav_msgs::Path path;
             path.header = ground_pc_msg->header;
-
+            path.header.frame_id=geometry_center_frame;
             //  center path point init
-            Matrix2Xd path_point(2,low_lines+1);
-            path_point.col(0)<<0,0;
+            Matrix2Xd path_point(2,low_lines);
             //add start point
-            geometry_msgs::PoseStamped start_pose;
-            start_pose.header = ground_pc_msg->header;
-            start_pose.pose.position.x = 0;
-            start_pose.pose.position.y = 0;
-            start_pose.pose.position.z = 0;
-            path.poses.push_back(start_pose);
-            //
             int point_p = 0; int path_point_num=0;
             for (int i = 0; i < low_lines; ++i) {
                 float sum_x=0, sum_y=0,sum_z=0;
@@ -87,61 +79,71 @@ namespace ground_exract {
                     point_p++;
                 }
                 //check point num
-                if (line_point_num<5)break;
+                if (line_point_num<4) continue;
                 geometry_msgs::PoseStamped curr_pose;
                 curr_pose.header = ground_pc_msg->header;
+                curr_pose.header.frame_id = geometry_center_frame;
                 Vector3d pos (sum_x/line_point_num, sum_y/line_point_num, sum_z/line_point_num);
                 path_buffer[i].push_back(pos);
                 Vector3d path_scan_av = std::accumulate(path_buffer[i].begin(),path_buffer[i].end(),Vector3d(0,0,0));
                 path_scan_av/=path_buffer[i].size();
-                curr_pose.pose.position.x = path_scan_av[0];
-                curr_pose.pose.position.y = path_scan_av[1];
-                curr_pose.pose.position.z = path_scan_av[2];
+                Vector4d simi_path_scan_av = Vector4d::Constant(1);
+                simi_path_scan_av.head(3) = path_scan_av;
+                cout<<simi_path_scan_av<<endl;
+
+                Vector4d path_scan_av_geo = M_geo_vleom * simi_path_scan_av;
+                curr_pose.pose.position.x = path_scan_av_geo[0];
+                curr_pose.pose.position.y = path_scan_av_geo[1];
+                curr_pose.pose.position.z = path_scan_av_geo[2];
                 //  note point
-                path_point.col(i+1) = path_scan_av.head(2);
+                path_point.col(path_point_num) = path_scan_av.head(2);
                 path_point_num++;
                 path.poses.push_back(curr_pose);
             }
             //transform point for curve
 
             const auto& curved_path = transform_path_point(path_point.block(0,0,2,path_point_num),path_point_num,ground_pc_msg->header);
-
             curved_path_pub.publish(*curved_path);
-            path_pub.publish(path);
+            if(path.poses.size()>3){
+                path_pub.publish(path);
+            }
 
 
         }
         template <typename Derived>
         nav_msgs::PathConstPtr transform_path_point(const MatrixBase<Derived>& in_points ,const int point_num ,const std_msgs::Header head) const{
             //tranform point to fit
-//            cout<< in_points<<endl;
             double turn_oriten = -atan2(in_points(1,point_num-1),in_points(0,point_num-1));
             Matrix2d rotation_m;
             rotation_m << cos(turn_oriten) , -sin(turn_oriten),sin(turn_oriten),cos(turn_oriten);
             Matrix2d inv_rotation_m;
             inv_rotation_m << cos(-turn_oriten) , -sin(-turn_oriten),sin(-turn_oriten),cos(-turn_oriten);
+            //transform to x axes
             Matrix2Xd rotated_path_point = rotation_m * in_points.block(0,0,2,point_num);
-
             // CubicSpline init
             ecl::Array<double> x_set(low_lines+1);
             ecl::Array<double> y_set(low_lines+1);
-            double x_max_range = in_points(0,point_num-1);
+            double x_max_range = rotated_path_point(0,point_num-1);
             for(int i=0;i<point_num;++i){
-                x_set[i] = in_points(0,i);
-                y_set[i] = in_points(1,i);
+                x_set[i] = rotated_path_point(0,i);
+                y_set[i] = rotated_path_point(1,i);
             }
             //curve func
             ecl::CubicSpline cubic = ecl::CubicSpline::Natural(x_set, y_set);
             //ready path
             nav_msgs::PathPtr pathPtr(new nav_msgs::Path());
             pathPtr->header = head;
+            pathPtr->header.frame_id=geometry_center_frame;
             for (int j = 0; j <x_max_range*10; ++j) {
                 double x_var =double(j)/10.0f;
                 double y_var =cubic(x_var);
+                Vector4d point_velm(cos(-turn_oriten)*x_var -sin(-turn_oriten)*y_var,sin(-turn_oriten)*x_var+cos(-turn_oriten)*y_var,0,1);
+                Vector4d point_geo = M_geo_vleom *point_velm;
                 geometry_msgs::PoseStamped curr_pose;
                 curr_pose.header = head;
-                curr_pose.pose.position.x = cos(-turn_oriten)*x_var -sin(-turn_oriten)*y_var;
-                curr_pose.pose.position.y = sin(-turn_oriten)*x_var+cos(-turn_oriten)*y_var;
+                curr_pose.header.frame_id=geometry_center_frame;
+                curr_pose.pose.position.x = point_geo(0);
+                curr_pose.pose.position.y = point_geo(1);
                 curr_pose.pose.position.z = 0;
                 pathPtr->poses.push_back(curr_pose);
 
@@ -158,9 +160,11 @@ namespace ground_exract {
         ros::Publisher path_pub;
         ros::Publisher curved_path_pub;
         vector<boost::circular_buffer<Vector3d>> path_buffer;
+        Matrix4d M_geo_vleom;
 
         //param
         int low_lines;
+        string geometry_center_frame;
 
     };//End of class SubscribeAndPublish
 
