@@ -46,7 +46,7 @@ namespace ground_exract {
             p_nh = ros::NodeHandle("~");
             low_lines = p_nh.param<int>("low_lines",4);
             abandon_min_points_num = p_nh.param<int>("abandon_min_points_num",12);
-            geometry_center_frame  ="velo_middle";
+            geometry_center_frame  ="geometry_center";
             // init
             curved_path_pub = nh.advertise<nav_msgs::Path>("/ground_detect/Path_curved",2);
 
@@ -54,8 +54,8 @@ namespace ground_exract {
             ground_pc_suber = nh.subscribe("/ground_detect/ground_points", 2, &Path_provider::callback, this);
             // path buffer intialise
             path_buffer = vector<boost::circular_buffer<Vector3d>>(low_lines,   boost::circular_buffer<Vector3d>(15));
-//            M_geo_vleom << 0.999971,-0.007000,-0.003000,-0.064900,0.007000,0.999976,-0.000021,0.000000,0.003000,-0.000000,0.999996,1.550000,0.000000,0.000000,0.000000,1.000000;
-            M_geo_vleom.setIdentity();
+            M_geo_vleom << 0.999971,-0.007000,-0.003000,-0.064900,0.007000,0.999976,-0.000021,0.000000,0.003000,-0.000000,0.999996,1.550000,0.000000,0.000000,0.000000,1.000000;
+//            M_geo_vleom.setIdentity();
         }
 
         void callback(const sensor_msgs::PointCloud2ConstPtr& ground_pc_msg) {
@@ -109,10 +109,10 @@ namespace ground_exract {
 //                path_point.col(path_point_num-1) = (path_point.col(path_point_num) +path_point.col(path_point_num-2))/2;
                 Matrix2d point_double_matrpath = path_point.block(0,0,2,2);
                 path_point.block(0,1,2,2)=point_double_matrpath;
-                cout<<"path_point.block(0,1,2,2)"<<endl<<path_point.block(0,1,2,2)<<endl;
+//                cout<<"path_point.block(0,1,2,2)"<<endl<<path_point.block(0,1,2,2)<<endl;
                 path_point.col(0) = Vector2d::Constant(2,0);
                 path_point_num++;
-                cout<<"path_point.block(0,0,2,path_point_num)"<<endl<<path_point.block(0,0,2,path_point_num)<<endl;
+//                cout<<"path_point.block(0,0,2,path_point_num)"<<endl<<path_point.block(0,0,2,path_point_num)<<endl;
             }
             const auto& curved_path = transform_path_point(path_point.block(0,0,2,path_point_num),path_point_num,ground_pc_msg->header);
             curved_path_pub.publish(*curved_path);
@@ -129,10 +129,10 @@ namespace ground_exract {
             Matrix2d inv_rotation_m;
             inv_rotation_m << cos(-turn_oriten) , -sin(-turn_oriten),sin(-turn_oriten),cos(-turn_oriten);
             //transform to x axes
-            cout<<"in_points.block(0,0,2,point_num)"<<endl<<in_points.block(0,0,2,point_num)<<endl;
+//            cout<<"in_points.block(0,0,2,point_num)"<<endl<<in_points.block(0,0,2,point_num)<<endl;
 
             Matrix2Xd rotated_path_point = rotation_m * in_points.block(0,0,2,point_num);
-            cout<<"rotated_path_point"<<endl<<rotated_path_point<<endl;
+//            cout<<"rotated_path_point"<<endl<<rotated_path_point<<endl;
             // CubicSpline init
             ecl::Array<double> x_set(point_num);
             ecl::Array<double> y_set(point_num);
@@ -141,8 +141,8 @@ namespace ground_exract {
                 x_set[i] = rotated_path_point(0,i);
                 y_set[i] = rotated_path_point(1,i);
             }
-            cout<<"x_set"<<x_set<<endl;
-            cout<<"y_set"<<y_set<<endl;
+//            cout<<"x_set"<<x_set<<endl;
+//            cout<<"y_set"<<y_set<<endl;
             //curve func 1.cubicSpline Natural 2.Smooth Linear Spline
             ecl::CubicSpline cubic = ecl::CubicSpline::Natural(x_set, y_set);
 //            double max_curvature = 0.5;
