@@ -47,6 +47,7 @@ namespace ground_exract {
             low_lines = p_nh.param<int>("low_lines",4);
             abandon_min_points_num = p_nh.param<int>("abandon_min_points_num",12);
             geometry_center_frame  ="geometry_center";
+            //frame_select 1.geometry_center 2.velo_middle
             // init
             curved_path_pub = nh.advertise<nav_msgs::Path>("/ground_detect/Path_curved",2);
 
@@ -120,6 +121,8 @@ namespace ground_exract {
 
 
         }
+
+
         template <typename Derived>
         nav_msgs::PathConstPtr transform_path_point(const MatrixBase<Derived>& in_points ,const int point_num ,const std_msgs::Header head) {
             //tranform point to fit

@@ -7,6 +7,7 @@
 #include <sensor_msgs/PointCloud2.h>
 //#include <nav_msgs/Odometry.h>
 #include <ground_detect/road_range.h>
+#include <std_srvs/Trigger.h>
 // pcl
 #include <pcl_ros/point_cloud.h>
 #include <pcl/point_types.h>
@@ -52,7 +53,15 @@ public:
         cloud_pub = nh.advertise<sensor_msgs::PointCloud2>("/ground_detect/forward_points",2);
         raw_pc_suber = nh.subscribe("/lidar/vlp32_middle/PointCloud2", 2, &Lidar_analyse::points_callback, this);
         range_suber = nh.subscribe("/ground_detect/road_range",2,&Lidar_analyse::range_callback,this);
+        terminal_service = nh.advertiseService("terminal_ground_detect_srv",&Lidar_analyse::terminal_node_publish,this);
     }
+    bool terminal_node_publish(std_srvs::TriggerRequest &request , std_srvs::TriggerResponse &response){
+        response.success = true;
+        terminal_publish_trigger = true;
+        return true;
+
+    }
+
     void range_init(){
         for (size_t i=0;i<low_lines*2;i++){
             scan_range.road_range.push_back ((pow(-1,i+2))*M_PI/4);
@@ -95,7 +104,7 @@ public:
 
             if (ori < scan_range.road_range[scanID * 2 ]+(M_PI/9/(scanID+1)) && ori > scan_range.road_range[scanID * 2 + 1]-(M_PI/9/(scanID+1))) {
                 p.intensity = float(scanID)+ori/10+0.5f;
-    //            cout<<"p.intensity: "<<p.intensity<<endl;
+                //            cout<<"p.intensity: "<<p.intensity<<endl;
                 laserCloudScans[scanID].push_back(p);
             }
         }
@@ -106,8 +115,8 @@ public:
         for (int i=0; i<low_lines;i++){
             selectPoints = selectPoints+laserCloudScans[i];
         }
-
-         cloud_pub.publish(selectPoints);
+        if(!terminal_publish_trigger)
+            cloud_pub.publish(selectPoints);
 
 
     }
@@ -121,6 +130,7 @@ private:
     ros::Publisher cloud_pub;
     ros::Subscriber raw_pc_suber;
     ros::Subscriber range_suber;
+    ros::ServiceServer terminal_service;
     float z_low_threshold;
 
 
@@ -129,6 +139,7 @@ private:
     //param
     const map<int,int> m = {{150,31}, {103,30}, {70,29}, {46,28}, {33,27}, {23,26}, {16,25}, {13,24}, {10,23}, {6,22}, {3,21}, {0,20}, {-3,19}, {-6,18}, {-10,17}, {-13,16}, {-16,15}, {-20,14}, {-23,13}, {-26,12}, {-30,11}, {-33,10}, {-36,9}, {-40,8}, {-46,7}, {-53,6}, {-61,5}, {-72,4}, {-88,3}, {-113,2}, {-156,1}, {-250,0}};
     int low_lines;
+    bool terminal_publish_trigger = false;
 //    float z_threshold;
 //    float distance_threshold;
     ground_detect::road_range scan_range;

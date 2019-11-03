@@ -99,14 +99,14 @@ target_link_libraries(path_provider
         ${catkin_LIBRARIES}
         ${PCL_LIBRARIES}
         )
-add_executable(blank
-        src/blank.cpp
-        )
-add_dependencies(blank ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(blank
-        ${catkin_LIBRARIES}
-        ${PCL_LIBRARIES}
-        )
+#add_executable(blank
+#        src/blank.cpp
+#        )
+#add_dependencies(blank ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+#target_link_libraries(blank
+#        ${catkin_LIBRARIES}
+#        ${PCL_LIBRARIES}
+#        )
 
 
 #add_executable(local_env_provider
