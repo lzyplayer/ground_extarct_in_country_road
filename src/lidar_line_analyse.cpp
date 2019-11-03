@@ -54,12 +54,24 @@ public:
         raw_pc_suber = nh.subscribe("/lidar/vlp32_middle/PointCloud2", 2, &Lidar_analyse::points_callback, this);
         range_suber = nh.subscribe("/ground_detect/road_range",2,&Lidar_analyse::range_callback,this);
         terminal_service = nh.advertiseService("terminal_ground_detect_srv",&Lidar_analyse::terminal_node_publish,this);
+        start_service = nh.advertiseService("start_ground_detect_srv",&Lidar_analyse::start_node_publish_reset,this);
+
     }
     bool terminal_node_publish(std_srvs::TriggerRequest &request , std_srvs::TriggerResponse &response){
         response.success = true;
+        response.message="safe for now...";
         terminal_publish_trigger = true;
         return true;
 
+    }
+    bool start_node_publish_reset(std_srvs::TriggerRequest &request , std_srvs::TriggerResponse &response){
+        response.success = true;
+        response.message="develop version, use caution";
+        scan_range.road_range.clear();
+        start_publish_trigger = true;
+        terminal_publish_trigger =false;
+        range_init();
+        return true;
     }
 
     void range_init(){
@@ -115,7 +127,7 @@ public:
         for (int i=0; i<low_lines;i++){
             selectPoints = selectPoints+laserCloudScans[i];
         }
-        if(!terminal_publish_trigger)
+        if(!terminal_publish_trigger && start_publish_trigger)
             cloud_pub.publish(selectPoints);
 
 
@@ -131,6 +143,8 @@ private:
     ros::Subscriber raw_pc_suber;
     ros::Subscriber range_suber;
     ros::ServiceServer terminal_service;
+    ros::ServiceServer start_service;
+
     float z_low_threshold;
 
 
@@ -140,6 +154,7 @@ private:
     const map<int,int> m = {{150,31}, {103,30}, {70,29}, {46,28}, {33,27}, {23,26}, {16,25}, {13,24}, {10,23}, {6,22}, {3,21}, {0,20}, {-3,19}, {-6,18}, {-10,17}, {-13,16}, {-16,15}, {-20,14}, {-23,13}, {-26,12}, {-30,11}, {-33,10}, {-36,9}, {-40,8}, {-46,7}, {-53,6}, {-61,5}, {-72,4}, {-88,3}, {-113,2}, {-156,1}, {-250,0}};
     int low_lines;
     bool terminal_publish_trigger = false;
+    bool start_publish_trigger = false;
 //    float z_threshold;
 //    float distance_threshold;
     ground_detect::road_range scan_range;
