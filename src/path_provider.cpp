@@ -103,17 +103,25 @@ namespace ground_exract {
                 path.poses.push_back(curr_pose);
             }
             //transform point for curve
-
+            //point low check and add mid
+            if(path_point_num<=2){
+                if(path_point_num<2) return;
+//                path_point.col(path_point_num-1) = (path_point.col(path_point_num) +path_point.col(path_point_num-2))/2;
+                Matrix2d point_double_matrpath = path_point.block(0,0,2,2);
+                path_point.block(0,1,2,2)=point_double_matrpath;
+                cout<<"path_point.block(0,1,2,2)"<<endl<<path_point.block(0,1,2,2)<<endl;
+                path_point.col(0) = Vector2d::Constant(2,0);
+                path_point_num++;
+                cout<<"path_point.block(0,0,2,path_point_num)"<<endl<<path_point.block(0,0,2,path_point_num)<<endl;
+            }
             const auto& curved_path = transform_path_point(path_point.block(0,0,2,path_point_num),path_point_num,ground_pc_msg->header);
             curved_path_pub.publish(*curved_path);
-            if(path.poses.size()>3){
-                path_pub.publish(path);
-            }
+            path_pub.publish(path);
 
 
         }
         template <typename Derived>
-        nav_msgs::PathConstPtr transform_path_point(const MatrixBase<Derived>& in_points ,const int point_num ,const std_msgs::Header head) const{
+        nav_msgs::PathConstPtr transform_path_point(const MatrixBase<Derived>& in_points ,const int point_num ,const std_msgs::Header head) {
             //tranform point to fit
             double turn_oriten = -atan2(in_points(1,point_num-1),in_points(0,point_num-1));
             Matrix2d rotation_m;
@@ -121,17 +129,24 @@ namespace ground_exract {
             Matrix2d inv_rotation_m;
             inv_rotation_m << cos(-turn_oriten) , -sin(-turn_oriten),sin(-turn_oriten),cos(-turn_oriten);
             //transform to x axes
+            cout<<"in_points.block(0,0,2,point_num)"<<endl<<in_points.block(0,0,2,point_num)<<endl;
+
             Matrix2Xd rotated_path_point = rotation_m * in_points.block(0,0,2,point_num);
+            cout<<"rotated_path_point"<<endl<<rotated_path_point<<endl;
             // CubicSpline init
-            ecl::Array<double> x_set(low_lines+1);
-            ecl::Array<double> y_set(low_lines+1);
+            ecl::Array<double> x_set(point_num);
+            ecl::Array<double> y_set(point_num);
             double x_max_range = rotated_path_point(0,point_num-1);
             for(int i=0;i<point_num;++i){
                 x_set[i] = rotated_path_point(0,i);
                 y_set[i] = rotated_path_point(1,i);
             }
-            //curve func
+            cout<<"x_set"<<x_set<<endl;
+            cout<<"y_set"<<y_set<<endl;
+            //curve func 1.cubicSpline Natural 2.Smooth Linear Spline
             ecl::CubicSpline cubic = ecl::CubicSpline::Natural(x_set, y_set);
+//            double max_curvature = 0.5;
+//            SmoothLinearSpline spline(x_set, y_set, max_curvature);
             //ready path
             nav_msgs::PathPtr pathPtr(new nav_msgs::Path());
             pathPtr->header = head;
@@ -139,6 +154,10 @@ namespace ground_exract {
             for (int j = 0; j <x_max_range*10; ++j) {
                 double x_var =double(j)/10.0f;
                 double y_var =cubic(x_var);
+                if(y_var!=y_var || abs(y_var)>50){
+                    ROS_INFO("nan or large move detected! using last path, use caution!");
+                }
+                if( j<5)cout<<"y_var "<<y_var<<endl;
                 Vector4d point_velm(cos(-turn_oriten)*x_var -sin(-turn_oriten)*y_var,sin(-turn_oriten)*x_var+cos(-turn_oriten)*y_var,0,1);
                 Vector4d point_geo = M_geo_vleom *point_velm;
                 geometry_msgs::PoseStamped curr_pose;
@@ -150,7 +169,7 @@ namespace ground_exract {
                 pathPtr->poses.push_back(curr_pose);
 
             }
-
+            last_path_ptr = pathPtr;
             return pathPtr;
         }
 
@@ -168,6 +187,9 @@ namespace ground_exract {
         int low_lines;
         int abandon_min_points_num;
         string geometry_center_frame;
+
+        //history
+        nav_msgs::PathPtr last_path_ptr;
 
     };//End of class SubscribeAndPublish
 

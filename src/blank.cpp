@@ -26,49 +26,69 @@
 #include <math.h>
 //#include <mutex>
 //#include <boost/circular_buffer.hpp>
+//
+using namespace Eigen;
+using namespace std;
 
-
-namespace ground_exract {
-
-    class Lidar_analyse {
-    public:
-        Lidar_analyse() {
-        }
-        virtual  ~Lidar_analyse(){
-        }
-
-        void onInit(){
-            p_nh = ros::NodeHandle("~");
-            // init
-
-            //Topic you want to publish
-//            pub_ = n_.advertise<PUBLISHED_MESSAGE_TYPE>("/published_topic", 1);
-
-            //Topic you want to subscribe
-            raw_pc_suber = nh.subscribe("/subscribed_topic", 1, &Lidar_analyse::callback, this);
-        }
-
-        void callback(const sensor &input) {
-            PUBLISHED_MESSAGE_TYPE output;
-            .... do something with the input and generate the output...
-            pub_.publish(output);
-        }
-
-    private:
-        ros::NodeHandle nh;
-        ros::NodeHandle p_nh;
-        ros::Publisher pub_;
-        ros::Subscriber raw_pc_suber;
-
-    };//End of class SubscribeAndPublish
 
     int main(int argc, char **argv) {
         //Initiate ROS
-        ros::init(argc, argv, "lidar_analyse_node");
-        Lidar_analyse lidarAnalyse;
-        lidarAnalyse.onInit();
-        ros::spin();
+//        try
+        Eigen::Vector2d tom(1,2);
+        Eigen::Vector2d maya(2,3);
+        tom = Vector2d::Constant(2,0);
+
+        Eigen::Vector2d caca = (tom+maya)/2;
+        tom.col(0) = Vector2d(1,2);
+        tom(0,1) =1;
+
+        cout<<tom<<endl;
 
         return 0;
     }
-}
+
+//
+//namespace ground_exract {
+//
+//    class Lidar_analyse {
+//    public:
+//        Lidar_analyse() {
+//        }
+//        virtual  ~Lidar_analyse(){
+//        }
+//
+//        void onInit(){
+//            p_nh = ros::NodeHandle("~");
+//            // init
+//
+//            //Topic you want to publish
+////            pub_ = n_.advertise<PUBLISHED_MESSAGE_TYPE>("/published_topic", 1);
+//
+//            //Topic you want to subscribe
+//            raw_pc_suber = nh.subscribe("/subscribed_topic", 1, &Lidar_analyse::callback, this);
+//        }
+//
+//        void callback(const sensor &input) {
+//            PUBLISHED_MESSAGE_TYPE output;
+//            .... do something with the input and generate the output...
+//            pub_.publish(output);
+//        }
+//
+//    private:
+//        ros::NodeHandle nh;
+//        ros::NodeHandle p_nh;
+//        ros::Publisher pub_;
+//        ros::Subscriber raw_pc_suber;
+//
+//    };//End of class SubscribeAndPublish
+//
+//    int main(int argc, char **argv) {
+//        //Initiate ROS
+//        ros::init(argc, argv, "lidar_analyse_node");
+//        Lidar_analyse lidarAnalyse;
+//        lidarAnalyse.onInit();
+//        ros::spin();
+//
+//        return 0;
+//    }
+//}
