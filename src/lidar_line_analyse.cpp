@@ -68,9 +68,8 @@ public:
         response.success = true;
         response.message="develop version, use caution";
         scan_range.road_range.clear();
-        start_publish_trigger = true;
-        terminal_publish_trigger =false;
         range_init();
+        terminal_publish_trigger =false;
         return true;
     }
 
@@ -86,6 +85,8 @@ public:
     }
 
     void points_callback(const sensor_msgs::PointCloud2ConstPtr& cloud_msg)  {
+        if(terminal_publish_trigger )
+            return;
         vector<pcl::PointCloud<pcl::PointXYZI> > laserCloudScans;
         laserCloudScans.resize(low_lines);
         pcl::PointCloud<pcl::PointXYZ>::Ptr curr_cloud (new pcl::PointCloud<pcl::PointXYZ>());
@@ -127,8 +128,7 @@ public:
         for (int i=0; i<low_lines;i++){
             selectPoints = selectPoints+laserCloudScans[i];
         }
-        if(!terminal_publish_trigger && start_publish_trigger)
-            cloud_pub.publish(selectPoints);
+        cloud_pub.publish(selectPoints);
 
 
     }
@@ -153,8 +153,7 @@ private:
     //param
     const map<int,int> m = {{150,31}, {103,30}, {70,29}, {46,28}, {33,27}, {23,26}, {16,25}, {13,24}, {10,23}, {6,22}, {3,21}, {0,20}, {-3,19}, {-6,18}, {-10,17}, {-13,16}, {-16,15}, {-20,14}, {-23,13}, {-26,12}, {-30,11}, {-33,10}, {-36,9}, {-40,8}, {-46,7}, {-53,6}, {-61,5}, {-72,4}, {-88,3}, {-113,2}, {-156,1}, {-250,0}};
     int low_lines;
-    bool terminal_publish_trigger = false;
-    bool start_publish_trigger = false;
+    bool terminal_publish_trigger = true;
 //    float z_threshold;
 //    float distance_threshold;
     ground_detect::road_range scan_range;

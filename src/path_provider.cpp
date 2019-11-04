@@ -46,7 +46,9 @@ namespace ground_exract {
             p_nh = ros::NodeHandle("~");
             low_lines = p_nh.param<int>("low_lines",4);
             abandon_min_points_num = p_nh.param<int>("abandon_min_points_num",12);
-            geometry_center_frame  ="geometry_center";
+            geometry_center_frame = p_nh.param<std::string>("map_tf","velo_middle");
+
+//            geometry_center_frame  ="velo_middle";
             //frame_select 1.geometry_center 2.velo_middle
             // init
             curved_path_pub = nh.advertise<nav_msgs::Path>("/ground_detect/Path_curved",2);
@@ -55,8 +57,15 @@ namespace ground_exract {
             ground_pc_suber = nh.subscribe("/ground_detect/ground_points", 2, &Path_provider::callback, this);
             // path buffer intialise
             path_buffer = vector<boost::circular_buffer<Vector3d>>(low_lines,   boost::circular_buffer<Vector3d>(15));
-            M_geo_vleom << 0.999971,-0.007000,-0.003000,-0.064900,0.007000,0.999976,-0.000021,0.000000,0.003000,-0.000000,0.999996,1.550000,0.000000,0.000000,0.000000,1.000000;
-//            M_geo_vleom.setIdentity();
+            if(geometry_center_frame == "geometry_center"){
+                M_geo_vleom << 0.999971,-0.007000,-0.003000,-0.064900,0.007000,0.999976,-0.000021,0.000000,0.003000,-0.000000,0.999996,1.550000,0.000000,0.000000,0.000000,1.000000;
+                ROS_INFO("select frame geometry_center as path frame");
+            }
+            else if(geometry_center_frame == "velo_middle" ){
+                M_geo_vleom.setIdentity();
+                ROS_INFO("select frame velo_middle as path frame");
+            } else
+                ROS_ERROR("please select vaild frame in launch, velo_middle or geometry_center");
         }
 
         void callback(const sensor_msgs::PointCloud2ConstPtr& ground_pc_msg) {
@@ -71,6 +80,7 @@ namespace ground_exract {
             Matrix2Xd path_point(2,low_lines);
             //add start point
             int point_p = 0; int path_point_num=0;
+            cout<<"-------------------"<<endl;
             for (int i = 0; i < low_lines; ++i) {
                 float sum_x=0, sum_y=0,sum_z=0;
                 int line_point_num=0;
@@ -82,7 +92,8 @@ namespace ground_exract {
                     point_p++;
                 }
                 //check point num
-                if (line_point_num<4) continue;
+                cout<<"curr_line_ID:" << i<<" points: "<< line_point_num<<endl;
+                if (line_point_num<20) continue;
                 geometry_msgs::PoseStamped curr_pose;
                 curr_pose.header = ground_pc_msg->header;
                 curr_pose.header.frame_id = geometry_center_frame;
@@ -160,7 +171,7 @@ namespace ground_exract {
                 if(y_var!=y_var || abs(y_var)>50){
                     ROS_INFO("nan or large move detected! using last path, use caution!");
                 }
-                if( j<5)cout<<"y_var "<<y_var<<endl;
+//                if( j<5)cout<<"y_var "<<y_var<<endl;
                 Vector4d point_velm(cos(-turn_oriten)*x_var -sin(-turn_oriten)*y_var,sin(-turn_oriten)*x_var+cos(-turn_oriten)*y_var,0,1);
                 Vector4d point_geo = M_geo_vleom *point_velm;
                 geometry_msgs::PoseStamped curr_pose;

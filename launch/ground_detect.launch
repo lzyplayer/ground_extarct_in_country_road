@@ -2,11 +2,12 @@
 <launch>
     <!--argument-->
     <arg name="low_lines" default="4" />
-    <arg name="z_threshold" default="0.03" />
+    <arg name="z_threshold" default="0.06" />
 <!--    <arg name="z_low_threshold" default="-2.1" />-->
-    <arg name="distance_threshold" default="0.17" />
-    <arg name="map_tf" default="velo_middle" />
-    <arg name="lowest_segment_point_num" default="6" />
+    <arg name="distance_threshold" default="0.20" />
+    <arg name="map_tf" default="geometry_center" />
+<!-- map_tf:1. velo_middle  2. geometry_center-->
+    <arg name="lowest_segment_point_num" default="12" />
     <arg name="abandon_min_points_num" default="6" />
 
 
@@ -26,6 +27,7 @@
 
     <node pkg="ground_detect" type="path_provider" name="path_provider_node" output="screen">
         <param name="low_lines" value="$(arg low_lines)" />
+        <param name="map_tf" value="$(arg map_tf)" />
         <param name="abandon_min_points_num" value="$(arg abandon_min_points_num)" />
     </node>
     <!--rviz-->

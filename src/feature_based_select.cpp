@@ -47,7 +47,7 @@ public:
         distanceSq_threshold = p_nh.param<float>("distance_threshold",0.1f);
         distanceSq_threshold *= distanceSq_threshold;
         z_threshold =p_nh.param<float>("z_threshold",0.03f);
-        lowest_segment_point_num = p_nh.param<int>("lowest_segment_point_num",5);
+        lowest_segment_point_num = p_nh.param<int>("lowest_segment_point_num",12);
         range_init();
 //        poseStamped.pose.position.x
         init_flag= false;
@@ -102,7 +102,7 @@ public:
             float diffy =scan.points[i].y-scan.points[i+1].y;
             float diffz =scan.points[i].z-scan.points[i+1].z;
 
-            if(diffx*diffx+diffy*diffy+diffz*diffz*10< distanceSq_threshold+(scanID-1)*0.02 && i!=scan.size()-1)
+            if(diffx*diffx+diffy*diffy+diffz*diffz*10< distanceSq_threshold+(scanID-1)*0.025 && i!=scan.size()-1)
                 segment.push_back(i);
             else{
                 if(segment.size()>=lowest_segment_point_num)
@@ -167,6 +167,7 @@ public:
         av_z_height/=segments[indi].size();
         // join based on av_z
         vector<int> sele_indi;
+        int join_times=-1;
         for (auto& s : segments){
             //check empty
             if (s.empty())continue;
@@ -176,10 +177,13 @@ public:
             }
             z_height/=s.size();
             if (abs(z_height-av_z_height)< z_threshold){
+
                 sele_indi.push_back(s[0]);
                 sele_indi.push_back(s[s.size()-1]);
+                join_times++;
             }
         }
+//        cout<<"currID:"<<int(scan[0].intensity)<<"join_times:"<<join_times<<endl;
         for (int i=sele_indi[0];i<=sele_indi[sele_indi.size()-1];++i){
             final_line->push_back(scan[i]);
         }
@@ -194,6 +198,18 @@ public:
             else if(ori<right_r)
                 right_r = ori;
         }
+        // ermergency wrong detected
+        if(int(scan[0].intensity) >0){
+            if(left_r<scan_range.road_range[ 2*int(scan[0].intensity)-1] || right_r>scan_range.road_range[ 2*int(scan[0].intensity)-2] || final_line->size()<20*(4 -int(scan[0].intensity)) ){
+                ROS_WARN("outer ground detected, abandon curr line and reset.");
+                scan_range.road_range[ 2*int(scan[0].intensity)] = M_PI/6;
+                scan_range.road_range[ 2*int(scan[0].intensity)+1] = -M_PI/6;
+                final_line->clear();
+                return final_line;
+
+            }
+        }
+
         scan_range.road_range[ 2*int(scan[0].intensity)] = left_r;
         scan_range.road_range[ 2*int(scan[0].intensity)+1] =right_r;
         return final_line;
