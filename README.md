@@ -12,7 +12,7 @@
 
 1. #### VLP32C line feature mode (currently adopt)
 
-   1. 只接受未补偿激光原始32线数据作为输入，因激光垂直角度值作为激光线数判断值
+   1. 只接受未补偿激光原始32线数据作为输入，因激光角度值用于激光线数判断和每点yaw值计算
 
    2. ```xml
       ground_detect.launch
