@@ -2,7 +2,7 @@
 <package format="2">
   <name>ground_detect</name>
   <version>0.0.0</version>
-  <description>The prm_localization package</description>
+  <description>The ground_detect package</description>
 
   <maintainer email="lzyplayer@stu.xjtu.edu.cn">vickylzy</maintainer>  <!-- One license tag required, multiple allowed, one license per tag -->
 
